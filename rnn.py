@@ -5,6 +5,9 @@ from torch import Tensor
 
 
 class RNNBase(nn.Module):
+    """Base class for advanced RNN Module"""
+    __constants__ = ['input_size', 'output_size', 'bias']
+
     def __init__(
         self, 
         input_size: int, 
@@ -28,9 +31,21 @@ class RNNBase(nn.Module):
         self.hh = nn.Linear(in_features=hidden_size, out_features=hidden_size, bias=bias, **factory_kwargs)
 
 
-
+# nn.RNN
 class RNNCell(RNNBase):
-    # nn.RNN
+    """An Elman RNN cell with tanh or ReLU non-linearity.
+
+    Args:
+        input_size: The number of expected features in the input 'x'
+        hidden_size: The number of fetures in the hidden state 'h'
+        bias: If `False` then the layer doen not use bias weight bias. but no bias code here.
+        nonlinearity: The non-linearity function to use. Can be either `tanh` or `relu`. Defaults to 'tanh'.
+
+    Inputs: input, hidden
+        - input: tensor containing the input features
+        - hidden: tensor containing the initial hidden state
+        """
+
     def __init__(
         self, 
         input_size: int, 
@@ -40,12 +55,11 @@ class RNNCell(RNNBase):
         dtype = None) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__(input_size=input_size, hidden_size=hidden_size, bias=bias, num_chunks=1,  **factory_kwargs)
-        
 
         def forward(self, input: Tensor, hx: Optional[Tensor] = None) -> Tensor:
-            # make zero tensor
+            # Make zero tensor if tensor is not initialized
             if hx is None:
-                hx = torch.zeros(input.size(0), self.hidden_size, dtype=self.dtype)
+                hx = torch.zeros(input.size(0), self.hidden_size, dtype=input.dtype, device=input.device)
             
             # forward
             hy = self.ih(input) * self.hh(hx)
@@ -124,5 +138,5 @@ class GRUCell(RNNBase):
 
 if __name__ == '__main__':
     lstm = LSTMCell(10, 20, True)
-    input = torch.randn(2, 3, 10)
-    lstm(input)
+    input = torch.randn(6, 3, 10)
+    lstm(input, hx)
