@@ -3,10 +3,10 @@ from typing import Optional, Tuple
 import torch
 from torch import Tensor
 
-from .base import RNNBase
+from .base import RNNCellBase
 
 
-class LSTMCell(RNNBase):
+class LSTMCell(RNNCellBase):
     def __init__(
         self, input_size: int, hidden_size: int, bias: bool, device=None, dtype=None
     ) -> None:
