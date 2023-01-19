@@ -24,17 +24,17 @@ class RNNCellBase(nn.Module):
         device=None,
         dtype=None,
     ) -> None:
-        super().__init__()
         factory_kwargs = {"device": device, "dtype": dtype}
+        super(RNNCellBase, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.bias = bias
-        self.num_chunks = num_chunks
-        self.nonlinearity = nonlinearity
-        if self.nonlinearity not in ["tanh", "relu"]:
-            raise ValueError(
-                "Invalid nonlinearity selected for RNN. Can be either  ``tanh`` or ``relu``"
-            )
+        # self.num_chunks = num_chunks
+        # self.nonlinearity = nonlinearity
+        # if self.nonlinearity not in ["tanh", "relu"]:
+        #     raise ValueError(
+        #         "Invalid nonlinearity selected for RNN. Can be either  ``tanh`` or ``relu``"
+        #     )
 
         self.ih = nn.Linear(
             in_features=input_size,
@@ -72,6 +72,7 @@ class RNNBase(nn.Module):
         device=None,
         dtype=None,
     ) -> None:
+        super(RNNBase, self).__init__()
         self.mode = mode
         self.input_size = input_size
         self.hidden_size = hidden_size

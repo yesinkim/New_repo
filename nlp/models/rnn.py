@@ -5,7 +5,7 @@ from torch import Tensor
 
 from .base import RNNBase, RNNCellBase
 
-torch.nn.RNN
+# torch.nn.RNN
 
 
 class RNNCell(RNNCellBase):
@@ -63,7 +63,6 @@ class RNNCell(RNNCellBase):
         return ret
 
 
-# TODO: dimension 변화 확인해보고 체크하기
 class RNN(RNNBase):
     def __init__(self, *args, **kwargs) -> None:
         self.nonlinearity = kwargs.pop("nonlinearity", "tanh")
@@ -76,7 +75,6 @@ class RNN(RNNBase):
         else:
             raise ValueError(f"Unknown nonlinearity: {self.nonlinearity}")
         super(RNN, self).__init__(mode, *args, **kwargs)
-
         self.forward_rnn = self.init_layers()
         if self.bidirectional:
             self.backward_rnn = self.init_layers()
@@ -105,7 +103,13 @@ class RNN(RNNBase):
 
         batch_dim = 0 if self.batch_first else 1
         sequence_dim = 1 if self.batch_first else 0
+        batch_size = input.size(0) if self.batch_first else input.size(1)
+        sequence_length = input.size(1) if self.batch_first else input.size(0)
+        print(f"batch_size: {batch_size}")
+        print(f"sequence_size: {sequence_length}")
+
         is_batch = input.dim() == 3  # batch가 포함된 3차원 텐서
+
         if not is_batch:
             input = input.unsqueeze(batch_dim)
             if hx is not None:  # hidden_state를 받으면
@@ -114,6 +118,7 @@ class RNN(RNNBase):
                         f"For unbatched 2D input, hx should also be 2D but got {hx.dim()}D tensor"
                     )
                 hx = hx.unsqueeze(1)  # tensor.size() -> (num_layers, 1, H_out)
+                print(f"hx tensor.size(): {hx.size()}")
 
         else:
             if (
@@ -125,9 +130,6 @@ class RNN(RNNBase):
 
         # input.size() -> (batch_size, sequence_length, input_size)
         # hx.size() -> (num_layers, batch_size, hidden_size) or None (becuase hx is Optional)
-
-        batch_size = input.size(0) if self.batch_first else input.size(1)
-        sequence_length = input.size(1) if self.batch_first else input.size(0)
 
         if hx is None:
             hx = torch.zeros(
@@ -147,14 +149,19 @@ class RNN(RNNBase):
         if self.bidirectional:
             next_hidden_forward, next_hidden_backward = [], []
             for layer_idx, (forward_cell, backward_cell) in enumerate(
-                self.forward_rnn, self.backward_rnn
+                zip(self.forward_rnn, self.backward_rnn)
             ):
                 if layer_idx == 0:
                     input_f_state = input
                     input_b_state = input
+                    print(f"input_f_state_0: {input_f_state.size()}")
+                    # print(f'input_b_state_0: {input_b_state.size()}')
+
                 else:
                     input_f_state = torch.stack(next_hidden_forward, dim=sequence_dim)
                     input_b_state = torch.stack(next_hidden_backward, dim=sequence_dim)
+                    print(f"input_f_state_{layer_idx}: {input_f_state.size()}")
+                    # print(f'input_b_state_{layer_idx}: {input_b_state.size()}')
                     next_hidden_forward, next_hidden_backward = [], []
 
                 forward_cell_i = hx[2 * layer_idx, :, :]
@@ -172,53 +179,63 @@ class RNN(RNNBase):
                         else input_b_state[-(i + 1), :, :]
                     )  # 완전히 뒤집어지는 backward이심.
 
-                    h_f_i = forward_cell(input_f_i, h_f_i)
-                    h_b_i = backward_cell(input_b_i, h_b_i)
+                    forward_cell_i = forward_cell(input_f_i, forward_cell_i)
+                    backward_cell_i = backward_cell(input_b_i, backward_cell_i)
+                    print(f"forward_cell_{i}: {forward_cell_i.size()}")
+                    # print(f'backward_cell_{i}: {backward_cell_i.size()}')
 
                     if self.dropout:
-                        h_f_i = self.dropout(h_f_i)
-                        h_b_i = self.dropout(h_b_i)
+                        forward_cell_i = self.dropout(forward_cell_i)
+                        backward_cell_i = self.dropout(backward_cell_i)
 
-                    next_hidden_forward.append(h_f_i)
-                    next_hidden_backward.append(h_b_i)
+                    next_hidden_forward.append(forward_cell_i)
+                    next_hidden_backward.append(backward_cell_i)
 
-                hidden_state.append(next_hidden_forward, dim=sequence_dim)
+                hidden_state.append(torch.stack(next_hidden_forward, dim=sequence_dim))
                 hidden_state.append(
-                    next_hidden_backward[::-1], dim=sequence_dim
-                )  # backward이기 때문에 뒤집어진다~
+                    torch.stack(next_hidden_backward[::-1], dim=sequence_dim)
+                )
+                # backward이기 때문에 순서가 뒤집어진다~
 
             hidden_states = torch.stack(
                 hidden_state, dim=0
             )  # -> (num_layers * 2, batch_size, sequence_length, hidden_out)
-
+            # print(f'hidden_states: {hidden_states.size()}')
             output_f_state = hidden_states[-2, :, :, :]
             output_b_state = hidden_states[-1, :, :, :]
-            output = torch.cat([output_f_state, output_b_state])
+            output = torch.cat([output_f_state, output_b_state], dim=2)
+            print(f"output_f_state: {output_f_state.size()}")
+            print(f"output_b_state: {output_b_state.size()}")
+            print(f"output: {output.size()}")
 
         else:
             next_hidden = []
             for layer_idx, rnn_cell in enumerate(self.forward_rnn):
+                print(f"연산 cell: {rnn_cell}")
                 if layer_idx == 0:
-                    input_state = input
+                    input_state = input  # -> [sequence_length, batch_size, H_in] or [batch_size, sequence_length, H_in]
+                    print(f"layer_idx가 0일때 input_state의 차원: {input_state.size()}")
                 else:
                     input_state = torch.stack(
                         next_hidden, dim=sequence_dim
                     )  # -> (sequence_length, batch_size, hidden_size)
                     next_hidden = []
-                input_state = (
-                    input  # TODO: 134번째 줄에서 에러 발생. 조건 필요 (layer 갯수가 2일 때 어떻게 될까요~~?)
-                )
+                    print(f"{layer_idx} layer input_state : {input_state.size()}")
+
                 h_i = hx[
                     layer_idx, :, :
                 ]  # [layer_idx, batch_size, H_out]: idx-1번째의 hidden_state
+                print(f"{layer_idx}th h_i : {h_i.size()}")
 
                 for i in range(sequence_length):
                     x_i = (
                         input_state[:, i, :]
                         if self.batch_first
                         else input_state[i, :, :]
-                    )  # 각 sequence tensor들을 골라냄 batch_first일 때 []
+                    )  # 각 sequence tensor들을 골라냄 batch_first일 때 (batch_size, H_in)
+                    print(f"i_{i+1}: {x_i.size()}")
                     h_i = rnn_cell(x_i, h_i)
+                    print(f"h_{i+1}: {h_i.size()}")
                     if self.dropout:
                         h_i = self.dropout(h_i)
                     next_hidden.append(h_i)  # 각 층의 hidden_states
@@ -227,23 +244,30 @@ class RNN(RNNBase):
                         next_hidden, dim=sequence_dim
                     )  # -> (sequence_length, batch_size, hidden_out)
                 )
-                # size() -> [batch_size, hidden_size * sequence_length, hidden_size * sequence_length
+                print(
+                    f"예상한 hidden_state의 dim: [batch_size, hidden_size * sequence_length, hidden_size]"
+                )
+                print(f"hidden_state_{layer_idx} : {hidden_state[layer_idx].size()}")
+                # size() -> (batch_size, batch_dim * sequence_length, hidden_size)
             hidden_states = torch.stack(
                 hidden_state, dim=0
             )  # -> (num_layers, sequence_length, batch_size, hidden_out)
+
             output = hidden_states[
                 -1, :, :, :
             ]  # -> (sequence_length, batch_size, hidden_out)
-            if self.batch_first:
-                hn = hidden_state[
-                    :, :, -1, :
-                ]  # -> (num_layers, batch_size, hidden_out)
-            else:
-                hn = hidden_state[
-                    :, -1, :, :
-                ]  # -> (num_layers, batch_size, hidden_out)
+            # if self.batch_first:
+            #     hn = hidden_state[:, :, -1, :]  # -> (batch_size, num_layers, hidden_out)
+            # else:
+            #     hn = hidden_state[:, -1, :, :]  # -> (num_layers, batch_size, hidden_out)
+        hn = (
+            hidden_states[:, :, -1, :]
+            if self.batch_first
+            else hidden_states[:, -1:, :, :]
+        )
+        print(f"hidden_states : {hidden_states.size()}")
 
-            return output, hn
+        return output, hn
 
     def init_layers(self) -> List[RNNCellBase]:
         """상속받은 클래스의 init_layers 수행"""

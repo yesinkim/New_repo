@@ -39,3 +39,8 @@ class GRUCell(RNNCellBase):
         h_t = (1 - update_gate) * new_gate + update_gate * hx
 
         return h_t
+
+
+# TODO: GRU 다른 코드 참고 최~~대한 하지 않고 만들어보기!!!
+class GRU(GRUCell):
+    pass
