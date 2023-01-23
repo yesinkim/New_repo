@@ -1,5 +1,4 @@
-from ast import List
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import torch
 from torch import Tensor
@@ -26,6 +25,7 @@ class LSTMCell(RNNCellBase):
             hx = (hx, hx)
 
         hx, cx = hx
+
         gates = self.ih(input) * self.hh(hx)  # first layer
         input_gate, forget_gate, cell_gate, output_gate = gates.chunk(4, 1)
 
@@ -42,7 +42,7 @@ class LSTMCell(RNNCellBase):
 
 class LSTM(RNNBase):
     def __init__(self, *args, **kwargs) -> None:
-        super(LSTM).__init__("LSTM", *args, **kwargs)
+        super(LSTM, self).__init__("LSTM", *args, **kwargs)
         self.forward_lstm = self.init_layers()
         if self.bidirectional:
             self.backward_lstm = self.init_layers
@@ -77,16 +77,21 @@ class LSTM(RNNBase):
             hx = (h_zero, c_zero)
 
         elif is_batch:  # batch가 존재할 때
-            # TODO: 마저 작성
             if hx[0].dim() != 3 or hx[1].dim() != 3:
                 msg = f"For unbatched 3D input, hx should also be 3D but got {hx.dim()}D tensor"
                 raise RuntimeError(msg)
+
+        else:
+            if hx[0].dim() != 2 or hx[1].dim() != 2:
+                msg = f"For unbatched 2D input, hx should also be 2D but got {hx.dim()}D tensor"
+                raise RuntimeError(msg)
+
             hx = (hx[0].unsqueeze(1), hx[1].unsqueeze(1))
 
         hidden_state = []
         cell_state = []
-        if self.bidirectional:
 
+        if self.bidirectional:
             next_hidden_forward, next_hidden_backward = [], []
             next_cell_forward, next_cell_backward = [], []
             for layer_idx, (forward_cell, backward_cell) in enumerate(
@@ -138,9 +143,16 @@ class LSTM(RNNBase):
                     next_cell_backward.append(backward_c_i)
 
                 hidden_state.append(torch.stack(next_hidden_forward, dim=sequence_dim))
-                hidden_state.append(
-                    torch.stack(next_hidden_backward[::-1], dim=sequence_dim)
-                )
+                hidden_state.append(torch.stack(next_cell_backward[::-1], dim=sequence_dim))
+                cell_state.append(torch.stack(next_cell_forward, dim=sequence_dim))
+                cell_state.append(torch.stack(next_cell_backward[::-1], dim=sequence_dim))
+            
+            hidden_states = torch.stack(hidden_state, dim=0)
+            cell_states =  torch.stack(cell_state, dim=0)
+
+            output_f_state = hidden_states[-2, :, :, :]
+            output_b_state = hidden_states[-1, :, :, :]
+            output = torch.cat([output_f_state, output_b_state], dim=2)
 
         else:
             next_hidden, next_cell = [], []
@@ -170,30 +182,24 @@ class LSTM(RNNBase):
                     next_cell.append(c_i)
 
                 hidden_state.append(torch.stack(next_hidden, dim=sequence_dim))
-                hidden_state.append(torch.stack(next_cell, dim=sequence_dim))
-                cell_state.append(torch.stack(next_hidden_forward, dim=sequence_dim))
-                cell_state.append(
-                    torch.stack(next_hidden_backward[::-1], dim=sequence_dim)
-                )
+                cell_state.append(torch.stack(next_cell, dim=sequence_dim))
 
             hidden_states = torch.stack(hidden_state, dim=0)
-            cell_states = torch.stack(cell_states, dim=0)
+            cell_states = torch.stack(cell_state, dim=0)
 
-            output_f_state = hidden_states[-2, :, :, :]
-            output_b_state = hidden_states[-1, :, :, :]
-            output = torch.cat([output_f_state, output_b_state], dim=2)
+            output = hidden_states[-1, :, :, :]
 
-            h_n = (
-                hidden_states[:, :, -1:, :]
-                if self.batch_first
-                else hidden_states[:, -1, :, :]
-            )
-            c_n = (
-                cell_states[:, :, -1:, :]
-                if self.batch_first
-                else cell_states[:, -1, :, :]
-            )
-            return output, (h_n, c_n)
+        h_n = (
+            hidden_states[:, :, -1:, :]
+            if self.batch_first
+            else hidden_states[:, -1, :, :]
+        )
+        c_n = (
+            cell_states[:, :, -1:, :]
+            if self.batch_first
+            else cell_states[:, -1, :, :]
+        )
+        return output, (h_n, c_n)
 
     def init_layers(self) -> List[LSTMCell]:
         """상속받은 클래스의 init_layers 수행"""
