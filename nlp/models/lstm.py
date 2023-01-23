@@ -45,7 +45,7 @@ class LSTM(RNNBase):
         super(LSTM, self).__init__("LSTM", *args, **kwargs)
         self.forward_lstm = self.init_layers()
         if self.bidirectional:
-            self.backward_lstm = self.init_layers
+            self.backward_lstm = self.init_layers()
 
     def forward(self, input: Tensor, hx: Optional[Tensor] = None) -> Tensor:
         batch_dim = 0 if self.batch_first else 1
@@ -95,7 +95,7 @@ class LSTM(RNNBase):
             next_hidden_forward, next_hidden_backward = [], []
             next_cell_forward, next_cell_backward = [], []
             for layer_idx, (forward_cell, backward_cell) in enumerate(
-                zip(self.forward_rnn, self.backward_rnn)
+                zip(self.forward_lstm, self.backward_lstm)
             ):
                 if layer_idx == 0:
                     input_f_state = input
