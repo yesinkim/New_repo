@@ -1,9 +1,9 @@
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import torch
 from torch import Tensor
 
-from .base import RNNCellBase
+from .base import RNNBase, RNNCellBase
 
 
 class GRUCell(RNNCellBase):
@@ -42,5 +42,129 @@ class GRUCell(RNNCellBase):
 
 
 # TODO: GRU 다른 코드 참고 최~~대한 하지 않고 만들어보기!!!
-class GRU(GRUCell):
-    pass
+class GRU(RNNBase):
+    def __init__(self, *args, **kwargs) -> None:
+        # TODO: What's GRU in super.init~?
+        super(GRU, self).__init__("GRU", *args, **kwargs)
+        self.forward_gru = self.init_layers()
+        if self.bidirectional:
+            self.backward_gru = self.init_layers()
+
+    def forward(self, input:Tensor, hx:Optional[Tensor] = None) -> Tensor:
+        batch_dim = 0 if self.batch_first else 1
+        sequence_dim = 1 if self.batch_first else 0
+        batch_size = input.size(batch_dim)
+        seqeunce_length = input.size(sequence_dim)
+
+        is_batch = input.dim() == 3 # input이 3차원 tensor인지?
+
+        if not is_batch:    # batch_dimesion 에러 raise
+            input = input.unsqueeze(batch_dim)
+            if hx is not None:  # hidden_state를 받으면
+                if hx.dim() != 2:  #
+                    raise RuntimeError(
+                        f"For unbatched 2D input, hx should also be 2D but got {hx.dim()}D tensor"
+                    )
+                hx = hx.unsqueeze(1)  # tensor.size() -> (num_layers, 1, H_out)
+                print(f"hx tensor.size(): {hx.size()}")
+            
+        else:
+            if (
+                hx is not None and hx.dim() != 3
+            ):  # hidden_state를 받았는데, dimension이 3이 아닐 때
+                raise RuntimeError(
+                    f"For batched 3D input, hx should also be 3D but got {hx.dim()}D tensor"
+                )
+            
+        if hx is None:
+            hx = torch.zeros(
+                self.num_layers * self.num_direction,
+                batch_size,
+                self.hidden_size,
+                dtype=self.dtype,
+                device=self.device
+            )
+        
+        hidden_state = []
+
+        if self.bidirectional:
+            next_forward_hidden, next_backward_hidden = [], []
+            for layer_idx, (forward_cell, backward_cell) in enumerate(self.forward_gru, self.backward_gru):
+                if layer_idx == 0:
+                    input_f_state = input
+                    input_b_state = input
+
+                else:
+                    input_f_state = torch.stack(next_forward_hidden, dim=sequence_dim)
+                    input_b_state = torch.stack(next_backward_hidden, dim=sequence_dim)
+                    next_forward_hidden, next_backward_hidden = [], []
+                
+                forward_cell_i = hx[2 * layer_idx, :, :]
+                backward_cell_i = hx[2 * layer_idx + 1, :, :]
+
+                for i in range(seqeunce_length):
+                    input_f_i = (input_f_state[:, i, :] if self.batch_first else input_f_state[i, :, :])
+                    input_b_i = (input_b_state[:, -(i+1), :, :] if self.batch_first else input_b_state[-(i+1), :, :])
+
+                    forward_cell_i = forward_cell(input_f_i, forward_cell_i)
+                    backward_cell_i = backward_cell(input_b_i, backward_cell_i)
+
+                    if self.dropout:
+                                forward_cell_i = self.dropout(forward_cell_i)
+                                backward_cell_i = self.dropout(backward_cell_i)
+                    
+                    next_forward_hidden.append(forward_cell_i)
+                    next_backward_hidden.append(backward_cell_i)
+
+                hidden_state.append(torch.stack(next_forward_hidden, dim=sequence_dim))
+                hidden_state(next_backward_hidden[::-1], dim=sequence_dim)
+
+            hidden_states = torch.stack(hidden_state, dim=0)
+            output_f_state = hidden_states[-2, :, :, :]
+            output_b_state = hidden_states[-1, :, :, :]
+            output = torch.cat([output_f_state, output_b_state], dim=2)
+
+        else: # non_bidirectional
+            next_hidden = []
+            for layer_idx, gru_cell in enumerate(self.forward_gru):
+                if layer_idx == 0:
+                    input_state = input
+                else:
+                    input_state = torch.stack(next_hidden, dim=sequence_dim)
+                    next_hidden = []
+
+                h_i = hx[layer_idx, :, :]
+
+                for i in range(seqeunce_length):
+                    x_i = input_state[:, i:, :] if self.batch_first else input_state[i :, :]
+                    h_i = gru_cell(x_i, h_i)
+
+                    if self.dropout:
+                        h_i = self.dropout(h_i)
+                    next_hidden.append(h_i)
+                hidden_state.append(torch.stack(next_hidden, dim=sequence_dim))
+            hidden_states = torch.stack(hidden_state, dim=0)
+            output = hidden_states[-1, :, :, :]     # the lastest layer
+        hn = (hidden_states[:, :, -1, :] if self.batch_first else hidden_states[:, -1, :, :])
+
+        return output, hn
+
+
+
+
+    def init_layers(self) -> List[GRUCell]:
+        """상속받은 클래스의 init_layers 수행"""
+        layers = []
+        for layer_idx in range(self.num_layers):
+            input_size = self.input_size if layer_idx == 0 else self.hidden_size
+            layers.append(
+                GRUCell(
+                    input_size=input_size,
+                    hidden_size=self.hidden_size,
+                    bias=self.bias,
+                    device=self.device,
+                    dtype=self.dtype,
+                )
+            )
+
+        return layers

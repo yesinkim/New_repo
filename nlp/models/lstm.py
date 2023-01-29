@@ -59,7 +59,7 @@ class LSTM(RNNBase):
         if not is_batch:
             input = input.unsqueeze(batch_dim)
 
-        if hx is None:
+        if hx is None:  # 첫번째 forward일 때 연산할 layer
             h_zero = torch.zeros(
                 self.num_layers * self.num_direction,
                 batch_size,
