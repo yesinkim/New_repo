@@ -143,12 +143,16 @@ class LSTM(RNNBase):
                     next_cell_backward.append(backward_c_i)
 
                 hidden_state.append(torch.stack(next_hidden_forward, dim=sequence_dim))
-                hidden_state.append(torch.stack(next_cell_backward[::-1], dim=sequence_dim))
+                hidden_state.append(
+                    torch.stack(next_cell_backward[::-1], dim=sequence_dim)
+                )
                 cell_state.append(torch.stack(next_cell_forward, dim=sequence_dim))
-                cell_state.append(torch.stack(next_cell_backward[::-1], dim=sequence_dim))
-            
+                cell_state.append(
+                    torch.stack(next_cell_backward[::-1], dim=sequence_dim)
+                )
+
             hidden_states = torch.stack(hidden_state, dim=0)
-            cell_states =  torch.stack(cell_state, dim=0)
+            cell_states = torch.stack(cell_state, dim=0)
 
             output_f_state = hidden_states[-2, :, :, :]
             output_b_state = hidden_states[-1, :, :, :]
@@ -195,9 +199,7 @@ class LSTM(RNNBase):
             else hidden_states[:, -1, :, :]
         )
         c_n = (
-            cell_states[:, :, -1:, :]
-            if self.batch_first
-            else cell_states[:, -1, :, :]
+            cell_states[:, :, -1:, :] if self.batch_first else cell_states[:, -1, :, :]
         )
         return output, (h_n, c_n)
 
