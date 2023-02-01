@@ -16,7 +16,10 @@ class GRUCell(RNNCellBase):
         )
 
     def forward(
-        self, input: Tensor, hx: Optional[Tuple[Tensor, Tensor]] = None
+        self,
+        input: Tensor,
+        hx: Optional[Tuple[Tensor, Tensor]] = None,
+        debug: bool = False,
     ) -> Tuple[Tensor, Tensor]:
         if hx is None:
             hx = torch.zeros(
@@ -26,11 +29,11 @@ class GRUCell(RNNCellBase):
                 device=input.device,
             )
 
-        x_t = self.ih(input)  # -> (3, 60)
-        h_t = self.hh(hx)  # -> (3, 60)
+        x_t = self.ih(input)  # -> (batch_size, hidden_size * num_chunk)
+        h_t = self.hh(hx)  # -> (batch_size, hidden_size * num_chunk)
 
-        x_reset, x_update, x_new = x_t.chunk(3, 1)  # 각 (3, 20)
-        h_reset, h_update, h_new = h_t.chunk(3, 1)  # 각 (3, 20)
+        x_reset, x_update, x_new = x_t.chunk(3, 1)  # 각 (batch_size, hideen_size)
+        h_reset, h_update, h_new = h_t.chunk(3, 1)  # 각 (batch_size, hideen_size)
         # TODO: 식 다시 확인 (참고링크: https://wikidocs.net/22889)
         r"""
         .. math::
@@ -43,7 +46,7 @@ class GRUCell(RNNCellBase):
             \end{array}"""
         reset_gate = torch.sigmoid(x_reset + h_reset)
         update_gate = torch.sigmoid(x_update + h_update)
-        new_gate = torch.tanh(reset_gate * (h_new + x_new))
+        new_gate = torch.tanh(reset_gate * h_new + x_new)
 
         h_t = (1 - update_gate) * new_gate + update_gate * hx
 
@@ -59,7 +62,9 @@ class GRU(RNNBase):
         if self.bidirectional:
             self.backward_gru = self.init_layers()
 
-    def forward(self, input: Tensor, hx: Optional[Tensor] = None) -> Tensor:
+    def forward(
+        self, input: Tensor, hx: Optional[Tensor] = None, debug: bool = False
+    ) -> Tensor:
         batch_dim = 0 if self.batch_first else 1
         sequence_dim = 1 if self.batch_first else 0
         batch_size = input.size(batch_dim)
@@ -158,22 +163,24 @@ class GRU(RNNBase):
 
                 for i in range(seqeunce_length):
                     x_i = (
-                        input_state[:, i:, :]
+                        input_state[:, i, :]
                         if self.batch_first
                         else input_state[i, :, :]
                     )
-                    print(f"i_{i+1}: {x_i.size()}")
                     h_i = gru_cell(
                         x_i, h_i
-                    )  # x_i.size -> (5, 3, 10), h_i.size -> 3, 20
-                    print(f"h_{i+1}: {h_i.size()}")
+                    )  # x_i.size -> (batch_size, input_size), h_i.size -> (batch_size, hidden_size)
+                    if debug:
+                        print(f"i_{i+1}: {x_i.size()}")
+                        print(f"h_{i+1}: {h_i.size()}")
                     if self.dropout:
                         h_i = self.dropout(h_i)
                     next_hidden.append(h_i)
                 hidden_state.append(torch.stack(next_hidden, dim=sequence_dim))
             hidden_states = torch.stack(hidden_state, dim=0)
             output = hidden_states[-1, :, :, :]  # the lastest layer
-        hn = (
+
+        hn = (  # the lastest cell
             hidden_states[:, :, -1, :]
             if self.batch_first
             else hidden_states[:, -1, :, :]
