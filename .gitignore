@@ -131,7 +131,6 @@ dmypy.json
 
 # custom
 .DS_Store
-*.ipynb
 *.model
 *.vocab
 *.csv
