@@ -88,6 +88,7 @@ class TrainDataset(AbstractDataset):
         trg_vocab: spm.SentencePieceProcessor,
         max_sequence_size,
     ):
+        super(TrainDataset, self).__init__(x_path, src_vocab, max_sequence_size)
         self.trg_data = open(y_path, "r", encoding="utf-8").readlines()
         self.trg_vocab = trg_vocab
         self.bos = self.trg_vocab["<s>"]
