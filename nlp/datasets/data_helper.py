@@ -86,8 +86,8 @@ class TrainDataset(AbstractDataset):
         src_vocab: spm.SentencePieceProcessor,
         y_path: str,
         trg_vocab: spm.SentencePieceProcessor,
-        max_sequence_size,
-    ):
+        max_sequence_size: int,
+    ) -> None:
         super(TrainDataset, self).__init__(x_path, src_vocab, max_sequence_size)
         self.trg_data = open(y_path, "r", encoding="utf-8").readlines()
         self.trg_vocab = trg_vocab
@@ -96,41 +96,36 @@ class TrainDataset(AbstractDataset):
 
     def __len__(self) -> int:
         if len(self.src_data) != len(self.trg_data):
-            raise IndexError("Not equal X data, Y data line size")
+            raise IndexError("not equal src_data, trg_data line size")
         return len(self.src_data)
 
     def __getitem__(self, index):
         encoder_input = self.encoder_input2tensor(self.src_data[index])
         decoder_input = self.decoder_input2tensor(self.trg_data[index])
-        decoder_output = decoder_input[1:] + torch.tensor(self.eos)
-
-        return encoder_input, self.padding(decoder_input), self.padding(decoder_output)
+        # Todo: eos 토큰이 잘리는게 나은지 남겨두는 게 나은지는 논의해야할 사항
+        decoder_output = decoder_input[1:] + [self.eos]
+        return (
+            encoder_input,
+            torch.tensor(self.padding(decoder_input)),
+            torch.tensor(self.padding(decoder_output)),
+        )
 
     def encoder_input2tensor(self, sentence: str) -> Tensor:
         idx_list = self.src_vocab.EncodeAsIds(sentence)
-        idx_list = self.padding(idx_list)
-
-        return idx_list
+        idx_list = self.padding(idx_list)  # max_sequence_size 길이의 List
+        return torch.tensor(idx_list)
 
     def decoder_input2tensor(self, sentence: str) -> Tensor:
         idx_list = self.trg_vocab.EncodeAsIds(sentence)
         idx_list.insert(0, self.bos)
-
-        return torch.tensor(idx_list)
-
-    def decoder_output2tensor(self, sentence: str) -> Tensor:
-        idx_list = self.trg_vocab.EncodeAsIds(sentence)
-        idx_list.append(self.eos)
-        idx_list = self.padding(idx_list)
-        # TODO: 마지막에 꼭 eos이 나와야 하는지, 다음단어가 나오는 게 좋을지 고려해보아야 함.
         if len(idx_list) > self.max_sequence_size:
-            idx_list = idx_list[self.max_sequence_size]
-
-        return torch.tensor(idx_list)
+            idx_list = idx_list[: self.max_sequence_size]
+        return idx_list
 
     def padding(self, idx_list: List[int]) -> List[int]:
         if len(idx_list) < self.max_sequence_size:
             idx_list = idx_list + [self.pad] * (self.max_sequence_size - len(idx_list))
+
         else:
             idx_list = idx_list[: self.max_sequence_size]
 

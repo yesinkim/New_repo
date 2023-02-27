@@ -23,8 +23,15 @@ class Encoder(nn.Module):
         super().__init__()
         self.embedding = nn.Embedding(input_size, hidden_size)
         self.layers = self.select_mode(
-            mode, hidden_size, n_layers, dropout, batch_first, bias, bidirectional
+            mode=mode,
+            hidden_size=hidden_size,
+            n_layers=n_layers,
+            bidirectional=bidirectional,
+            bias=bias,
+            dropout=dropout,
+            batch_first=batch_first,
         )
+
         for m in self.modules():
             if hasattr(m, "weight") and m.weight.dim() > 1:
                 nn.init.xavier_uniform_(m.weight.data)
@@ -32,10 +39,10 @@ class Encoder(nn.Module):
     def forward(
         self,
         enc_input: Tensor,
-        enc_hidden: Optional[Union[Tensor, Tuple[Tensor]]] = None,
+        enc_hidden: Optional[Union[Tensor, Tuple[Tensor, Tensor]]] = None,
     ):
-        embeded = self.embedding(enc_input, enc_hidden)
-        output, hidden = self.layers(embeded)
+        embeded = self.embedding(enc_input)
+        output, hidden = self.layers(embeded, enc_hidden)
         return output, hidden
 
     def select_mode(
@@ -48,9 +55,19 @@ class Encoder(nn.Module):
         bias: bool = True,
         bidirectional: bool = False,
     ):
-
         if mode == "lstm":
             return nn.LSTM(
+                hidden_size,
+                hidden_size,
+                num_layers=n_layers,
+                bidirectional=bidirectional,
+                bias=bias,
+                dropout=dropout,
+                batch_first=batch_first,
+            )
+
+        elif mode == "rnn":
+            return nn.RNN(
                 hidden_size,
                 hidden_size,
                 num_layers=n_layers,
@@ -71,16 +88,8 @@ class Encoder(nn.Module):
                 batch_first=batch_first,
             )
 
-        elif mode == "rnn":
-            return nn.RNN(
-                hidden_size,
-                hidden_size,
-                num_layers=n_layers,
-                bidirectional=bidirectional,
-                bias=bias,
-                dropout=dropout,
-                batch_first=batch_first,
-            )
+        else:
+            raise ValueError("param `mode` must be one of [rnn, lstm, gru]")
 
 
 class Decoder(nn.Module):
