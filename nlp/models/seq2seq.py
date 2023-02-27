@@ -32,10 +32,6 @@ class Encoder(nn.Module):
             batch_first=batch_first,
         )
 
-        for m in self.modules():
-            if hasattr(m, "weight") and m.weight.dim() > 1:
-                nn.init.xavier_uniform_(m.weight.data)
-
     def forward(
         self,
         enc_input: Tensor,
@@ -129,7 +125,6 @@ class Decoder(nn.Module):
         bias: bool = True,
         bidirectional: bool = False,
     ):
-
         if mode == "lstm":
             return nn.LSTM(
                 hidden_size,
