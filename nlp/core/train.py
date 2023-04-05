@@ -137,6 +137,7 @@ class Trainer(AbstractTools):
             output.topk(1)[1].squeeze()[0, :].tolist(), self.trg_vocab
         )
         target_sentence = self.tensor2sentence(trg_input[0].tolist(), self.trg_vocab)
+        self.print_result(input_sentence, predict_sentence, target_sentence)
         self.model.train()
         
         return total_loss / len(self.valid_loader)
