@@ -1,8 +1,9 @@
 import os
+
 import torch
 import torch.nn as nn
-from torch import Tensor
 from omegaconf import DictConfig
+from torch import Tensor
 
 from ..utils.utils import count_parameters
 from ..utils.weight_initialization import select_weight_initialize_method
@@ -15,26 +16,26 @@ class Trainer(AbstractTools):
         self.model = self.get_model()
         self.model.train()
         self.optimizer = self.init_optimizer()
-        
+
         select_weight_initialize_method(
             method=self.arg.model.weight_init,
             distribution=self.arg.model.weight_distribution,
             model=self.model,
         )
-        
+
         self.train_loader, self.valid_loader = self.get_loader()
         self.loss_funtion = nn.CrossEntropyLoss(
             ignore_index=self.arg.pad_id,
-            label_smoothing=self.arg.trainer.label_smoothing_value
+            label_smoothing=self.arg.trainer.label_smoothing_value,
         )
 
     def train(self):
         print(f"The model {count_parameters(self.model)} trainerble parameters.")
-        
-        epoch_step = len(self.train_loader) + 1 # 한 epoch 스텝수
+
+        epoch_step = len(self.train_loader) + 1  # 한 epoch 스텝수
         total_step = self.arg.trainer.epochs * epoch_step
         step = 0
-        
+
         for epoch in range(self.arg.trainer.epochs):
             for idx, data in enumerate(self.train_loader, 1):
                 try:
@@ -42,18 +43,18 @@ class Trainer(AbstractTools):
                     src_input, trg_input, trg_output = data
                     output = self.model(src_input, trg_input)
                     loss = self.calculate_loss(output, trg_output)
-                    
+
                     if step % self.arg.trainer.print_train_step == 0:
                         print(
                             f"[Train] epoch {epoch:2d} iter: {epoch_step:4d}/{step:4d} step: {step:6d}/{total_step:6d} => loss: {loss.items():10f}"
                         )
-                        
+
                     if step % self.arg.trainer.print_valid_step == 0:
                         val_loss = self.valid()
                         print(
                             f"[Train] epoch {epoch:2d} iter: {epoch_step:4d}/{step:4d} step: {step:6d}/{total_step:6d} => loss: {val_loss:10f}"
                         )
-        
+
                     if step % self.arg.trainer.svae_step == 0:
                         self.save_model(epoch, step)
 
@@ -65,7 +66,6 @@ class Trainer(AbstractTools):
                     self.save_model(epoch, step)
                     raise e
 
-        
     # TODO: model과 optimizer 선언을 initilize 할 때 해주는 방법도 있기 때문에 고민해볼 것!
     def init_optimizer(self, model: nn.Module) -> None:
         optimizer_type = self.arg.trainer.optimizer
@@ -91,8 +91,8 @@ class Trainer(AbstractTools):
             raise ValueError("trainer param 'optimizer' must be one of [Adam, AdamW].")
 
         return optimizer_type
-    
-    def calculate_loss(self, predict: Tensor, target:Tensor) -> Tensor:
+
+    def calculate_loss(self, predict: Tensor, target: Tensor) -> Tensor:
         """_summary_
 
         Args:
@@ -104,7 +104,7 @@ class Trainer(AbstractTools):
         """
         predict = predict.transpose(1, 2)
         return self.loss_function(predict, target)
-    
+
     def save_model(self, epoch: int, step: int) -> None:
         model_name = f"{str(step).zfill(6)}_{self.arg.model.model_type}.pth"
         model_path = os.path.join(self.arg.data.model_path, model_name)
@@ -115,21 +115,21 @@ class Trainer(AbstractTools):
                 "data": self.arg.data,  # data, model, trainer는 보통 Option
                 "model": self.arg.model,
                 "trainer": self.arg.trainer,
-                "model_state_dict": self.model.state_dict()
+                "model_state_dict": self.model.state_dict(),
             },
-            model_path
+            model_path,
         )
-        
+
     def valid(self) -> float:
         self.model.eval()
         total_loss = 0
-        
+
         with torch.no_grad():
             for data in self.valid_loader:
-                    src_input, trg_input, trg_output = data
-                    output = self.model(src_input, trg_input)
-                    loss = self.calculate_loss(output, trg_output)
-                    total_loss += loss.items()
+                src_input, trg_input, trg_output = data
+                output = self.model(src_input, trg_input)
+                loss = self.calculate_loss(output, trg_output)
+                total_loss += loss.items()
 
         # validation sample 확인
         input_sentence = self.tensor2sentence(src_input[0].tolist(), self.src_vocab)
@@ -139,5 +139,5 @@ class Trainer(AbstractTools):
         target_sentence = self.tensor2sentence(trg_input[0].tolist(), self.trg_vocab)
         self.print_result(input_sentence, predict_sentence, target_sentence)
         self.model.train()
-        
+
         return total_loss / len(self.valid_loader)

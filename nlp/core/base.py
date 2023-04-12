@@ -82,34 +82,34 @@ class AbstractTools(ABC):
             src_vocab=self.src_vocab,
             y_path=self.arg.data.trg_train_path,
             trg_vocab=self.trg_vocab,
-            max_sequence_size=self.arg.max_sequence_size
+            max_sequence_size=self.arg.max_sequence_size,
         )
-        
+
         valid_dataset = TrainDataset(
             x_path=self.arg.data.src_valid_path,
             src_vocab=self.src_vocab,
             y_path=self.arg.data.trg_valid_path,
             trg_vocab=self.trg_vocab,
-            max_sequence_size=self.arg.max_sequence_size
+            max_sequence_size=self.arg.max_sequence_size,
         )
-        
+
         train_sampler = RandomSampler(train_dataset)
         valid_sampler = RandomSampler(valid_dataset)
-        
+
         train_loader = DataLoader(
             dataset=train_dataset,
             sampler=train_sampler,
-            batch_size=self.arg.trainer.batch_size
+            batch_size=self.arg.trainer.batch_size,
         )
-        
+
         valid_loader = DataLoader(
             dataset=valid_dataset,
             sampler=valid_sampler,
-            batch_size=self.arg.valider.batch_size
+            batch_size=self.arg.valider.batch_size,
         )
-        
+
         return train_loader, valid_loader
-    
+
     @staticmethod
     def tensor2sentence(indices: List[int], vocab: spm.SentencePieceProcessor) -> str:
         result = []
@@ -118,14 +118,14 @@ class AbstractTools(ABC):
             if word == "<pad>":
                 break
             result.append(word)
-        
+
         return "".join(result).replace("_", "").strip()
-    
+
     @staticmethod
     def print_result(
         input_sentence: str,
         predict_sentence: str,
-        target_sentence: Optional[str] = None
+        target_sentence: Optional[str] = None,
     ) -> None:
         bleu_score = calculate_bleu(target_sentence, predict_sentence)
         print(f"=============== TEST ===============")
