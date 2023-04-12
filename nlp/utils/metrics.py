@@ -9,7 +9,7 @@ def bleu_score(reference: str, output: str, gram_num: int) -> float:
     output = output.strip()
     
     
-    # make ngram precision
+    # make ngram precision (https://albertauyeung.github.io/2018/06/03/generating-ngrams.html/)
     refer_tokens = [token for token in reference.split(" ") if token != ""]
     output_tokens = [token for token in output.split(" ") if token != ""]
     precision = 1
@@ -26,7 +26,7 @@ def bleu_score(reference: str, output: str, gram_num: int) -> float:
 # def make_ngram(reference: str, output: str, gram_num: int):
 if __name__ == '__main__':
 
-
+    # test
     output = '빛이 쐬는 노인은 완벽한 어두운곳에서 잠든 사람과 비교할 때 강박증이 심해질 기회가 훨씬 높았다'
     refer = '빛이 쐬는 사람은 완벽한 어둠에서 잠든 사람과 비교할 때 우울증이 심해질 가능성이 훨씬 높았다'
 
