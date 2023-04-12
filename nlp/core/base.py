@@ -3,12 +3,13 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import sentencepiece as spm
 import torch.nn as nn
+from omegaconf import DictConfig
 from torch import Tensor
 from torch.utils.data import DataLoader, RandomSampler
-from omegaconf import DictConfig
 
 from ..datasets.data_helper import TrainDataset, create_or_load_tokenizer
 from ..models.seq2seq import Seq2Seq
+from ..utils.metrics import bleu_score as calculate_bleu
 
 
 class AbstractTools(ABC):
@@ -126,7 +127,9 @@ class AbstractTools(ABC):
         predict_sentence: str,
         target_sentence: Optional[str] = None
     ) -> None:
+        bleu_score = calculate_bleu(target_sentence, predict_sentence)
         print(f"=============== TEST ===============")
         print(f"Source     : {input_sentence}")
         print(f"Pridict    : {predict_sentence}")
         print(f"Target     : {target_sentence}")
+        print(f"Bleu score : {bleu_score}")
