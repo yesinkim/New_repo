@@ -30,7 +30,7 @@ class AbstractTools(ABC):
                 "bidirectional": self.arg.model.bidirectional,
                 "bias": self.arg.model.bias,
                 "batch_first": self.arg.model.bias,
-                "max_seq_length": self.arg.model.max_seq_length,
+                "max_seq_length": self.arg.model.max_sequence_size,
             }
 
         else:
@@ -82,7 +82,7 @@ class AbstractTools(ABC):
             src_vocab=self.src_vocab,
             y_path=self.arg.data.trg_train_path,
             trg_vocab=self.trg_vocab,
-            max_sequence_size=self.arg.max_sequence_size,
+            max_sequence_size=self.arg.model.max_sequence_size,
         )
 
         valid_dataset = TrainDataset(
@@ -90,7 +90,7 @@ class AbstractTools(ABC):
             src_vocab=self.src_vocab,
             y_path=self.arg.data.trg_valid_path,
             trg_vocab=self.trg_vocab,
-            max_sequence_size=self.arg.max_sequence_size,
+            max_sequence_size=self.arg.model.max_sequence_size,
         )
 
         train_sampler = RandomSampler(train_dataset)
@@ -105,7 +105,7 @@ class AbstractTools(ABC):
         valid_loader = DataLoader(
             dataset=valid_dataset,
             sampler=valid_sampler,
-            batch_size=self.arg.valider.batch_size,
+            batch_size=self.arg.trainer.batch_size,
         )
 
         return train_loader, valid_loader

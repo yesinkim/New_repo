@@ -138,3 +138,6 @@ dmypy.json
 *.en
 outputs/*
 *.ipynb
+
+wandb
+SavedModel

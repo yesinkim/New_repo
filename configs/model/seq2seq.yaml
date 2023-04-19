@@ -1,5 +1,5 @@
 model_type: "seq2seq"
-max_seq_length: 50
+max_sequence_size: 50
 d_hidden: 512
 n_layers: 6
 mode: "lstm"

@@ -1,6 +1,5 @@
 import random
-from ast import Tuple
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -39,6 +38,7 @@ class Encoder(nn.Module):
     ):
         embeded = self.embedding(enc_input)
         output, hidden = self.layers(embeded, enc_hidden)
+        # print()
         return output, hidden
 
     def select_mode(
@@ -105,6 +105,8 @@ class Decoder(nn.Module):
         self.layers = self.select_mode(
             mode, hidden_size, n_layers, dropout, batch_first, bias, bidirectional
         )
+        if bidirectional:
+            hidden_size *= 2
         self.linear = nn.Linear(hidden_size, output_size)
         self.softmax = nn.LogSoftmax(dim=1)
 
@@ -216,7 +218,7 @@ class Seq2Seq(nn.Module):
             if i == 0 or random.random() >= teacher_forcing_rate:
                 dec_input_i = dec_input[:, i]  # 정답을 넣어줌
             else:
-                dec_input_i = dec_output_i.topk(1)[1].sequeeze().detach()
+                dec_input_i = dec_output_i.topk(1)[1].squeeze().detach()
             dec_output_i, dec_hidden = self.decoder(dec_input_i, dec_hidden)
             decoder_output[:, i, :] = dec_output_i
         return decoder_output

@@ -5,6 +5,8 @@ import torch.nn as nn
 from omegaconf import DictConfig
 from torch import Tensor
 
+import wandb
+
 from ..utils.utils import count_parameters
 from ..utils.weight_initialization import select_weight_initialize_method
 from .base import AbstractTools
@@ -24,13 +26,16 @@ class Trainer(AbstractTools):
         )
 
         self.train_loader, self.valid_loader = self.get_loader()
-        self.loss_funtion = nn.CrossEntropyLoss(
-            ignore_index=self.arg.pad_id,
+        self.loss_function = nn.CrossEntropyLoss(
+            ignore_index=self.arg.data.pad_id,
             label_smoothing=self.arg.trainer.label_smoothing_value,
         )
 
+        wandb.init(config=self.arg)
+
     def train(self):
         print(f"The model {count_parameters(self.model)} trainerble parameters.")
+        wandb.watch(self.model)
 
         epoch_step = len(self.train_loader) + 1  # 한 epoch 스텝수
         total_step = self.arg.trainer.epochs * epoch_step
@@ -45,12 +50,14 @@ class Trainer(AbstractTools):
                     loss = self.calculate_loss(output, trg_output)
 
                     if step % self.arg.trainer.print_train_step == 0:
+                        wandb.log({"Train Loss": loss.item()})
                         print(
-                            f"[Train] epoch {epoch:2d} iter: {epoch_step:4d}/{step:4d} step: {step:6d}/{total_step:6d} => loss: {loss.items():10f}"
+                            f"[Train] epoch {epoch:2d} iter: {epoch_step:4d}/{step:4d} step: {step:6d}/{total_step:6d} => loss: {loss.item():10f}"
                         )
 
                     if step % self.arg.trainer.print_valid_step == 0:
                         val_loss = self.valid()
+                        wandb.log({"Valid Loss": val_loss})
                         print(
                             f"[Train] epoch {epoch:2d} iter: {epoch_step:4d}/{step:4d} step: {step:6d}/{total_step:6d} => loss: {val_loss:10f}"
                         )
@@ -67,11 +74,11 @@ class Trainer(AbstractTools):
                     raise e
 
     # TODO: model과 optimizer 선언을 initilize 할 때 해주는 방법도 있기 때문에 고민해볼 것!
-    def init_optimizer(self, model: nn.Module) -> None:
+    def init_optimizer(self) -> None:
         optimizer_type = self.arg.trainer.optimizer
         if optimizer_type == "Adam":
-            self.optimizer = torch.optim.Adam(
-                model.parameters(),
+            optimizer = torch.optim.Adam(
+                self.model.parameters(),
                 lr=self.arg.trainer.learning_rate,
                 betas=(self.arg.trainer.optimizer_b1, self.arg.trainer.optimizer_b2),
                 eps=self.arg.trainer.optimizer_e,
@@ -79,8 +86,8 @@ class Trainer(AbstractTools):
             )
 
         elif optimizer_type == "AdamW":
-            self.optimizer = torch.optim.AdamW(
-                model.parameters(),
+            optimizer = torch.optim.AdamW(
+                self.model.parameters(),
                 lr=self.arg.trainer.learning_rate,
                 betas=(self.arg.trainer.optimizer_b1, self.arg.trainer.optimizer_b2),
                 eps=self.arg.trainer.optimizer_e,
@@ -90,7 +97,7 @@ class Trainer(AbstractTools):
         else:
             raise ValueError("trainer param 'optimizer' must be one of [Adam, AdamW].")
 
-        return optimizer_type
+        return optimizer
 
     def calculate_loss(self, predict: Tensor, target: Tensor) -> Tensor:
         """_summary_
@@ -103,11 +110,13 @@ class Trainer(AbstractTools):
             Tensor: _description_
         """
         predict = predict.transpose(1, 2)
+
         return self.loss_function(predict, target)
 
     def save_model(self, epoch: int, step: int) -> None:
         model_name = f"{str(step).zfill(6)}_{self.arg.model.model_type}.pth"
         model_path = os.path.join(self.arg.data.model_path, model_name)
+        os.makedirs(self.arg.data.model_path, exist_ok=True)
         torch.save(
             {
                 "epoch": epoch,
@@ -129,7 +138,7 @@ class Trainer(AbstractTools):
                 src_input, trg_input, trg_output = data
                 output = self.model(src_input, trg_input)
                 loss = self.calculate_loss(output, trg_output)
-                total_loss += loss.items()
+                total_loss += loss.item()
 
         # validation sample 확인
         input_sentence = self.tensor2sentence(src_input[0].tolist(), self.src_vocab)

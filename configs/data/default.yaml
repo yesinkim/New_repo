@@ -13,7 +13,7 @@ trg_valid_path: "data/${data.folder_name}/valid.${data.trg_language}"
 tokenizer: "unigram"  # choice of [unigram, bpe, char, word]
 dictionary_path: "dict/${data.folder_name}"
 
-model_path: "SavedModel/${data.project_name}/${data.floder_name}"
+model_path: "SavedModel/${data.project_name}/${data.folder_name}"
 
 src_vocab_size: 8000
 trg_vocab_size: 8000
