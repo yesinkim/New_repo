@@ -1,0 +1,252 @@
+
+
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>nlp.utils.metrics_refer module &mdash; Scratch_study 1.0.0 문서</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.min.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.min.css" type="text/css" />
+    <link rel="index" title="색인" href="../genindex.html" />
+    <link rel="search" title="검색" href="../search.html" />
+    <link rel="next" title="nlp.utils.utils module" href="nlp.utils.utils.html" />
+    <link rel="prev" title="nlp.utils.metrics module" href="nlp.utils.metrics.html" /> 
+
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <a class="site-nav-toggle hidden-lg-up"><i class="icon-menu"></i></a>
+            <a class="site-title" href="../index.html">
+                Scratch_study
+            </a>
+        </div>
+    </header>
+
+
+<div class="breadcrumbs-outer hidden-xs-down">
+    <div class="container">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a></li>
+        
+          <li><a href="nlp.utils.html">nlp.utils package</a></li>
+        
+      <li>nlp.utils.metrics_refer module</li>
+    
+    
+      <li class="breadcrumbs-aside">
+        
+            
+            <a href="../_sources/nlp/nlp.utils.metrics_refer.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+</div>
+    </div>
+</div>
+    <div class="main-outer">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-lg-3 site-nav">
+                    
+<div role="search">
+    <form class="search" action="../search.html" method="get">
+        <div class="icon-input">
+            <input type="text" name="q" placeholder="Search" />
+            <span class="icon-search"></span>
+        </div>
+        <input type="submit" value="이동" class="d-hidden" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+                    <div class="site-nav-tree">
+                        
+                            
+                            
+                                <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="nlp.core.html">nlp.core package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nlp.core.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nlp.core.html#module-nlp.core">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nlp.datasets.html">nlp.datasets package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nlp.datasets.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nlp.datasets.html#module-nlp.datasets">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nlp.models.html">nlp.models package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nlp.models.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nlp.models.html#module-nlp.models">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="nlp.utils.html">nlp.utils package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="nlp.utils.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nlp.utils.html#module-nlp.utils">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+                            
+                        
+                    </div>
+                </div>
+                <div class="col-12 col-lg-9">
+                    <div class="document">
+                        
+                            
+  <section id="module-nlp.utils.metrics_refer">
+<span id="nlp-utils-metrics-refer-module"></span><h1>nlp.utils.metrics_refer module<a class="headerlink" href="#module-nlp.utils.metrics_refer" title="이 제목에 대한 퍼머링크">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="nlp.utils.metrics_refer.calculate_bleu">
+<span class="sig-prename descclassname"><span class="pre">nlp.utils.metrics_refer.</span></span><span class="sig-name descname"><span class="pre">calculate_bleu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predict_sentence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_sentence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#nlp.utils.metrics_refer.calculate_bleu" title="이 정의에 대한 퍼머링크">¶</a></dt>
+<dd><p>두 문장의 Bleu score를 측정하는 함수
+:param predict_sentence: 모델이 예측한 문장
+:type predict_sentence: str
+:param target_sentence: reference 문장
+:type target_sentence: str</p>
+<dl class="field-list simple">
+<dt class="field-odd">반환<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bleu score</p>
+</dd>
+<dt class="field-even">반환 형식<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="nlp.utils.metrics_refer.make_freq_list">
+<span class="sig-prename descclassname"><span class="pre">nlp.utils.metrics_refer.</span></span><span class="sig-name descname"><span class="pre">make_freq_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ngrams</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#nlp.utils.metrics_refer.make_freq_list" title="이 정의에 대한 퍼머링크">¶</a></dt>
+<dd><p>n-gram 별로 빈도를 저장하는 리스트 생성
+:param ngrams: n-gram 으로 분리된 sentence List
+:type ngrams: str</p>
+<dl class="field-list simple">
+<dt class="field-odd">반환<span class="colon">:</span></dt>
+<dd class="field-odd"><p>각 n-gram 리스트별 빈도</p>
+</dd>
+<dt class="field-even">반환 형식<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[List[Union[Tuple[str], int]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="nlp.utils.metrics_refer.precision">
+<span class="sig-prename descclassname"><span class="pre">nlp.utils.metrics_refer.</span></span><span class="sig-name descname"><span class="pre">precision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#nlp.utils.metrics_refer.precision" title="이 정의에 대한 퍼머링크">¶</a></dt>
+<dd><p>output 문장과 target 문장 사이의 precision을 측정하는 함수
+:param output: 각 ngram 별로 split한 output 문장 list와 빈도수 list
+:type output: List[Union[List[Tuple[str], List[int]]]]
+:param target: 각 ngram 별로 split한 target 문장 list와 빈도수 list
+:type target: List[Union[List[Tuple[str], List[int]]]]</p>
+<dl class="field-list simple">
+<dt class="field-odd">반환<span class="colon">:</span></dt>
+<dd class="field-odd"><p>두 문장의 precision</p>
+</dd>
+<dt class="field-even">반환 형식<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="nlp.utils.metrics_refer.word_ngram">
+<span class="sig-prename descclassname"><span class="pre">nlp.utils.metrics_refer.</span></span><span class="sig-name descname"><span class="pre">word_ngram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_gram</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#nlp.utils.metrics_refer.word_ngram" title="이 정의에 대한 퍼머링크">¶</a></dt>
+<dd><p>문장을 ngram 단위로 split 하는 함수
+:param sentence: 분석할 문장
+:type sentence: str
+:param num_gram: n-gram 단위
+:type num_gram: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">반환<span class="colon">:</span></dt>
+<dd class="field-odd"><p>n-gram 단위로 split 된 sentence</p>
+</dd>
+<dt class="field-even">반환 형식<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>    
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            LANGUAGE:'ko',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+    <script type="text/javascript" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/sphinx_highlight.js"></script>
+    <script type="text/javascript" src="../_static/translations.js"></script>
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+    <div class="footer" role="contentinfo">
+        <div class="container">
+            &#169; 저작권 2023, yesin kim.
+        Created using <a href="http://sphinx-doc.org/">Sphinx</a> 6.1.3.
+        </div>
+    </div>  
+
+</body>
+</html>
