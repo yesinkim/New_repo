@@ -10,7 +10,7 @@ Welcome to Scratch_study's documentation!
 
 .. Note::
    이것은 노트입니다.
-   주석을 달면서 공부를 하면 좋을 것입니다.
+   각 함수에 주석을 달아보세요.
 
    - todolist
       - |:white_check_mark:| sphinx test
@@ -18,7 +18,7 @@ Welcome to Scratch_study's documentation!
       - |:negative_squared_cross_mark:| 이거 markdown 적용할 수 있나?
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    .. ./nlp/modules
