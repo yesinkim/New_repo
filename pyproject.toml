@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "pytorchRNN"
+version = "0.1.0"
+description = ""
+authors = ["yesinkim <bailando.ys@gmail.com>"]
+readme = "README.md"
+packages = [{include = "pytorchRNN"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+black = "^23.3.0"
+isort = "^5.12.0"
+pre-commit = "^3.3.1"
+numpy = "^1.24.3"
+ipykernel = "^6.23.0"
+hydra-core = "^1.3.2"
+pandas = "^2.0.1"
+sentencepiece = "^0.1.99"
+torch = "^2.0.1"
+wandb = "^0.15.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
