@@ -7,10 +7,8 @@ from omegaconf import DictConfig
 from torch import Tensor
 from torch.utils.data import DataLoader, RandomSampler
 
-from nlp.models.attention import Seq2SeqWithAttention
-
 from ..datasets.data_helper import TrainDataset, create_or_load_tokenizer
-from ..models.seq2seq import Seq2Seq
+from ..models import Seq2Seq, Seq2SeqWithAttention, Transformer
 from ..utils.metrics import bleu_score as calculate_bleu
 
 
@@ -47,6 +45,22 @@ class AbstractTools(ABC):
                 "batch_first": self.arg.model.bias,
                 "max_seq_length": self.arg.model.max_sequence_size,
             }
+        elif model_type == "transformer":
+            params = {
+                "max_seq_length": self.arg.model.max_sequence_size,
+                "d_hidden": self.arg.model.d_hidden,
+                "dropout_rate": self.arg.model.dropout_rate,
+                "enc_d_input": self.arg.src_vocab_size,
+                "enc_layers": self.arg.model.enc_d_input,
+                "enc_heads": self.arg.model.enc_heads,
+                "enc_head_dim": self.arg.model.enc_head_dim,
+                "enc_ff_dim": self.arg.model.enc_ff_dim,
+                "dec_d_input": self.arg.data.trg_vocab_size,
+                "dec_layers": self.arg.model.dec_d_input,
+                "dec_heads": self.arg.model.dec_heads,
+                "dec_head_dim": self.arg.model.dec_head_dim,
+                "dec_ff_dim": self.arg.model.dec_ff_dim,
+            }
 
         else:
             raise ValueError("param 'model_type' must be one of [seq2seq]")
@@ -61,7 +75,9 @@ class AbstractTools(ABC):
         elif model_type == "attention":
             model = Seq2SeqWithAttention(**params)
         else:
-            raise ValueError("param 'model_type' must be one of [seq2seq]")
+            raise ValueError(
+                "param 'model_type' must be one of [seq2seq, attention, transformer]"
+            )
         return model
 
     def get_vocab(
