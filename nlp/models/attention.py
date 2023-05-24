@@ -31,6 +31,7 @@ class DotProductAttention(nn.Module):
         attn_prob = nn.Softmax(dim=-1)(scores)
         attn_prob = self.dropout(attn_prob)
         context = torch.matmul(attn_prob, value)
+
         return context, attn_prob
 
 
@@ -201,3 +202,17 @@ class Seq2SeqWithAttention(nn.Module):
             )
             decoder_output[:, i, :] = dec_output_i
         return decoder_output
+
+
+class MultiHeadAttention(nn.Module):
+    def __init__(self, hidden_dim, n_heads, dropout=0) -> None:
+        super().__init__(MultiHeadAttention, self).__init__()
+        self.hidden_dim = hidden_dim
+        self.n_heads = n_heads
+        self.head_dim = hidden_dim / n_heads
+
+        self.Q = nn.Linear(hidden_dim, self.head_dim)
+        self.K = nn.Linear(hidden_dim, self.head_dim)
+        self.V = nn.Linear(hidden_dim, self.head_dim)
+
+        self.attention = DotProductAttention()

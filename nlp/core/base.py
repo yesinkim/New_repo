@@ -60,6 +60,7 @@ class AbstractTools(ABC):
                 "dec_heads": self.arg.model.dec_heads,
                 "dec_head_dim": self.arg.model.dec_head_dim,
                 "dec_ff_dim": self.arg.model.dec_ff_dim,
+                "padding_id": self.arg.data.pad_id,
             }
 
         else:
