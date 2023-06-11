@@ -47,16 +47,16 @@ class AbstractTools(ABC):
             }
         elif model_type == "transformer":
             params = {
-                "max_seq_length": self.arg.model.max_sequence_size,
-                "d_hidden": self.arg.model.d_hidden,
+                "max_seq_len": self.arg.model.max_sequence_size,
+                "hidden_dim": self.arg.model.d_hidden,
                 "dropout_rate": self.arg.model.dropout_rate,
-                "enc_d_input": self.arg.src_vocab_size,
-                "enc_layers": self.arg.model.enc_d_input,
+                "enc_d_input": self.arg.data.src_vocab_size,
+                "enc_layers": self.arg.model.enc_layers,
                 "enc_heads": self.arg.model.enc_heads,
                 "enc_head_dim": self.arg.model.enc_head_dim,
                 "enc_ff_dim": self.arg.model.enc_ff_dim,
                 "dec_d_input": self.arg.data.trg_vocab_size,
-                "dec_layers": self.arg.model.dec_d_input,
+                "dec_layers": self.arg.model.dec_layers,
                 "dec_heads": self.arg.model.dec_heads,
                 "dec_head_dim": self.arg.model.dec_head_dim,
                 "dec_ff_dim": self.arg.model.dec_ff_dim,
@@ -73,8 +73,13 @@ class AbstractTools(ABC):
         params = self.get_params()
         if model_type == "seq2seq":
             model = Seq2Seq(**params)
+
         elif model_type == "attention":
             model = Seq2SeqWithAttention(**params)
+
+        elif model_type == "transformer":
+            model = Transformer(**params)
+
         else:
             raise ValueError(
                 "param 'model_type' must be one of [seq2seq, attention, transformer]"
