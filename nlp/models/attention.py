@@ -31,6 +31,7 @@ class DotProductAttention(nn.Module):
         attn_prob = nn.Softmax(dim=-1)(scores)
         attn_prob = self.dropout(attn_prob)
         context = torch.matmul(attn_prob, value)
+
         return context, attn_prob
 
 
