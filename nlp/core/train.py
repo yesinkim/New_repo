@@ -7,7 +7,7 @@ from torch import Tensor
 
 import wandb
 
-from ..utils.utils import count_parameters
+from ..utils.utils import count_parameters, get_device
 from ..utils.weight_initialization import select_weight_initialize_method
 from .base import AbstractTools
 
@@ -15,8 +15,9 @@ from .base import AbstractTools
 class Trainer(AbstractTools):
     def __init__(self, cfg: DictConfig) -> None:
         super().__init__(cfg)
+        self.device = get_device()
         self.model = self.get_model()
-        self.model.train()
+        self.model.train().to(device=self.device)
         self.optimizer = self.init_optimizer()
 
         select_weight_initialize_method(
@@ -110,6 +111,9 @@ class Trainer(AbstractTools):
             Tensor: _description_
         """
         predict = predict.transpose(1, 2)
+        if self.device.type == "mps":
+            predict = predict.to(device="cpu")
+            target = target.to(device="cpu")
 
         return self.loss_function(predict, target)
 
